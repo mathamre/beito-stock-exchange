@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Table } from "@navikt/ds-react";
 import SelectNumber from "./SelectNumber";
+import GetAllData from "@/pages/api/GetAllData";
+import buyStocks from "@/pages/api/buyStocks";
+import router from "next/router";
 
-const data = [
+let data = [
   {
     name: "Olsen",
     value: [24.0, 26.0],
@@ -37,25 +40,68 @@ const data = [
   },
 ];
 
+interface dataValues {
+  name: string;
+  value: Array<number>;
+  change: number;
+  numberOfStock: number;
+  ROI: number;
+  spent: number;
+}
+
 function TableComp() {
   const [newData, setNewData] = useState(data);
+  const [fetchedData, setFetchedData] = useState<dataValues[]>([]);
 
-  // Function to handle stock purchase
-  const buyStocks = (name: string, numberOfStock: number) => {
-    setNewData((prevData) =>
-      prevData.map((entry) =>
-        entry.name === name
-          ? {
-              ...entry,
-              numberOfStock: entry.numberOfStock + numberOfStock,
-              spent:
-                entry.spent +
-                numberOfStock * entry.value[entry.value.length - 1],
-            }
-          : entry
-      )
-    );
+  const fetchData = useCallback(async () => {
+    try {
+      const data: dataValues[] = await GetAllData();
+      console.log("Fetched Data: ", fetchedData);
+      setFetchedData(data);
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    console.log("fetchedData");
+    fetchData();
+  }, [fetchData]);
+
+  const handleBuyStocks = async (name: string, numberOfStock: number) => {
+    try {
+      const payload = { name, numberOfStocks: numberOfStock };
+      const result = await buyStocks(payload);
+
+      // Update the local data after a successful response
+      setNewData((prevData) =>
+        prevData.map((entry) =>
+          entry.name === name
+            ? {
+                ...entry,
+                numberOfStock: entry.numberOfStock + numberOfStock,
+                spent:
+                  entry.spent +
+                  numberOfStock * entry.value[entry.value.length - 1],
+              }
+            : entry
+        )
+      );
+    } catch (error: any) {
+      if (error instanceof Error) {
+        if (error.message === "Not Found") {
+          router.push("/404");
+        } else if (error.message === "Internal Server Error") {
+          router.push("/500");
+        } else {
+          router.push("/error");
+        }
+      } else {
+        router.push("/error");
+      }
+    }
   };
+
   const sortedData = [...newData]
     .map((entry) => {
       const lastValue = entry.value[entry.value.length - 1] || 0;
@@ -98,12 +144,11 @@ function TableComp() {
                   </Table.DataCell>
                   <Table.DataCell>{numberOfStock}</Table.DataCell>
                   <Table.DataCell>
-                    {" "}
                     {spent !== 0 ? (totalValue / spent).toFixed(2) : 0}
                   </Table.DataCell>
                   <Table.DataCell>${totalValue.toFixed(2)}</Table.DataCell>
                   <Table.DataCell>
-                    {<SelectNumber name={name} buyStocks={buyStocks} />}
+                    {<SelectNumber name={name} buyStocks={handleBuyStocks} />}
                   </Table.DataCell>
                 </Table.Row>
               );

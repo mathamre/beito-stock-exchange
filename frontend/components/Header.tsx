@@ -17,10 +17,11 @@ function Header() {
       {/* Logo Section */}
       <div style={{ width: "5%", height: "100%", position: "relative" }}>
         <Image
-          src={"/nordnet-logo.png"}
-          alt={""}
-          layout="fill"
-          objectFit="contain"
+          src="/nordnet-logo.png"
+          alt=""
+          fill
+          style={{ objectFit: "contain" }}
+          sizes="5vw"
         />
       </div>
 

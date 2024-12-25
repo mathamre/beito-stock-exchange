@@ -7,7 +7,7 @@ function Header() {
       style={{
         height: "80px",
         width: "100%",
-        backgroundColor: "beige",
+        backgroundColor: "black",
         display: "flex",
         flexDirection: "row",
         alignItems: "center", // Vertically centers content
@@ -15,7 +15,14 @@ function Header() {
       }}
     >
       {/* Logo Section */}
-      <div style={{ width: "5%", height: "100%", position: "relative" }}>
+      <div
+        style={{
+          width: "5%",
+          height: "100%",
+          position: "relative",
+          marginLeft: "3%",
+        }}
+      >
         <Image
           src="/nordnet-logo.png"
           alt=""
@@ -32,9 +39,10 @@ function Header() {
           display: "flex",
           justifyContent: "center", // Horizontally centers the title
           alignItems: "center", // Vertically centers the title
+          marginLeft: "-5%",
         }}
       >
-        <h1 style={{ color: "black" }}>Beito Stock Xchange</h1>
+        <h1 style={{ color: "white" }}>Beito Stock Xchange</h1>
       </div>
     </div>
   );

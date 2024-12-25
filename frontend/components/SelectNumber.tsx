@@ -16,7 +16,7 @@ function SelectNumber({ name, buyStocks }: Props) {
 
   return (
     <div>
-      <form style={{ display: "flex", flexDirection: "row" }}>
+      <form style={{ display: "flex", flexDirection: "row", gap: "5%" }}>
         <div>
           <Select
             label=""
@@ -37,7 +37,7 @@ function SelectNumber({ name, buyStocks }: Props) {
           </Select>
         </div>
         <Button variant="primary" size="small" onClick={handleSubmit}>
-          Primary
+          Kjøp
         </Button>
       </form>
     </div>

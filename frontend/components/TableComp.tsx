@@ -4,41 +4,7 @@ import SelectNumber from "./SelectNumber";
 import GetAllData from "@/pages/api/GetAllData";
 import buyStocks from "@/pages/api/buyStocks";
 import router from "next/router";
-
-let data = [
-  {
-    name: "Olsen",
-    value: [24.0, 26.0],
-    change: 0.25,
-    numberOfStock: 8,
-    ROI: 0,
-    spent: 50,
-  },
-  {
-    name: "Hansen",
-    value: [30.0, 35.0],
-    change: 0.15,
-    numberOfStock: 5,
-    ROI: 0,
-    spent: 65,
-  },
-  {
-    name: "Johansen",
-    value: [10.0, 15.0],
-    change: 0.1,
-    numberOfStock: 12,
-    ROI: 0,
-    spent: 25,
-  },
-  {
-    name: "Thomsen",
-    value: [12.0, 15.0],
-    change: 0.1,
-    numberOfStock: 12,
-    ROI: 0,
-    spent: 27,
-  },
-];
+import InputNumber from "./InputNumber";
 
 interface dataValues {
   name: string;
@@ -49,25 +15,12 @@ interface dataValues {
   spent: number;
 }
 
-function TableComp() {
-  const [newData, setNewData] = useState(data);
-  const [fetchedData, setFetchedData] = useState<dataValues[]>([]);
+interface Props {
+  tableData: dataValues[];
+}
 
-  const fetchData = useCallback(async () => {
-    try {
-      const data: dataValues[] = await GetAllData();
-      console.log("Fetched Data: ", fetchedData);
-      setFetchedData(data);
-    } catch (error) {
-      console.error("Error fetching data: ", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    console.log("fetchedData");
-    fetchData();
-  }, [fetchData]);
-
+function TableComp({ tableData }: Props) {
+  const [newData, setNewData] = useState<dataValues[]>(tableData || []);
   const handleBuyStocks = async (name: string, numberOfStock: number) => {
     try {
       const payload = { name, numberOfStocks: numberOfStock };
@@ -130,8 +83,7 @@ function TableComp() {
             ({ name, value, numberOfStock, ROI, totalValue, spent }, index) => {
               return (
                 <Table.Row key={name}>
-                  <Table.HeaderCell scope="row">{index + 1}</Table.HeaderCell>{" "}
-                  {/* Position is determined dynamically */}
+                  <Table.HeaderCell scope="row">{index + 1}</Table.HeaderCell>
                   <Table.DataCell>{name}</Table.DataCell>
                   <Table.DataCell>${value[value.length - 1]}</Table.DataCell>
                   <Table.DataCell>
@@ -148,7 +100,7 @@ function TableComp() {
                   </Table.DataCell>
                   <Table.DataCell>${totalValue.toFixed(2)}</Table.DataCell>
                   <Table.DataCell>
-                    {<SelectNumber name={name} buyStocks={handleBuyStocks} />}
+                    {<InputNumber name={name} buyStocks={handleBuyStocks} />}
                   </Table.DataCell>
                 </Table.Row>
               );

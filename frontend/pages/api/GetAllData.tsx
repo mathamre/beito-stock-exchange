@@ -14,11 +14,18 @@ async function GetAllData() {
     const response = await fetch(endpointURL, options);
 
     if (!response.ok) {
-      throw new Error(`HTTP error, status = ${response.status}`);
+      if (response.status === 404) {
+        throw new Error("Not Found");
+      } else if (response.status === 500) {
+        throw new Error("Internal Server Error");
+      } else {
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${response.statusText}`
+        );
+      }
     }
 
     const jsonData = await response.json();
-    console.log(jsonData);
     return jsonData;
   } catch (error) {
     console.error("Error fetching risk categories:", error);

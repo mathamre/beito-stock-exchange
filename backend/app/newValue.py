@@ -1,84 +1,74 @@
 import threading
 import random
-import main
+import math
 
-# Initialize spike_counters lazily
-spike_counters = None
+# Spike counters for stocks
+spike_counters = {}
 
-
-def initialize_spike_counters():
+def initialize_spike_counters(data):
     """
-    Initialize spike counters for each stock in the data.
+    Initialize spike counters for each stock in the data if not already initialized.
     """
     global spike_counters
-    if spike_counters is None:
-        spike_counters = {user["name"]: random.randint(50, 200) for user in main.data}
+    if not spike_counters:
+        spike_counters = {user["name"]: random.randint(50, 300) for user in data}
 
 
-def update_stock() -> None:
+def update_stock(data, save_to_csv) -> None:
     """
-    Continuously update stock prices with zigzagging behavior and random price spikes.
+    Continuously update stock prices with diminishing growth and volatility.
     """
-    initialize_spike_counters()  # Ensure spike_counters are initialized
+    global spike_counters
+    initialize_spike_counters(data)  # Ensure spike counters are set
 
-    total_stocks = sum(user["numberOfStock"] for user in main.data)  # Total stocks in the market
-    total_market_value = sum(user["value"][-1] for user in main.data)  # Total value of all stocks
+    total_stocks = sum(user["numberOfStock"] for user in data) or 1  # Avoid division by zero
+    total_market_value = sum(user["value"][-1] for user in data) or 1  # Avoid division by zero
 
-    for user in main.data:
+    for user in data:
         current_price = user["value"][-1]
         user_stocks = user["numberOfStock"]
         user_name = user["name"]
 
-        # Dynamic growth rate: Proportional to the user's stock count and market value
-        if total_stocks > 0:
-            growth_factor = user_stocks / total_stocks
-        else:
-            growth_factor = 0.2
-        baseline_growth_rate = 0.005 + (0.02 * growth_factor)  # Scale growth rate by stock ownership
+        # Growth factor: Weighted by the number of stocks owned
+        growth_factor = user_stocks / total_stocks
 
-        # Volatility: Create zigzag behavior
-        zigzag_volatility = random.uniform(-0.05, 0.05) * current_price
+        # Stochastic flat period: Random chance for no growth
+        if random.random() < 0.3:  # 30% chance to skip growth
+            user["value"].append(round(current_price, 2))
+            continue
 
-        # Purchase impact and decay
+        # Diminishing returns for growth: Logarithmic or square-root based growth
+        baseline_growth_rate = 0.002 + (0.05 * growth_factor)
+        diminishing_growth = baseline_growth_rate * math.sqrt(current_price) / (current_price + 1)
+
+        # Zigzag effect: Add small random fluctuations to simulate volatility
+        zigzag = random.uniform(-0.01, 0.01) * current_price
+
+        # Handle purchase impact
         purchase_impact = user.get("purchase_impact", 0)
-        decay_factor = 0.85
-        user["purchase_impact"] *= decay_factor
+        user["purchase_impact"] *= 0.9  # Gradual decay
 
         # Handle random spike
-        spike_counter = spike_counters[user_name]
-        if spike_counter <= 0:
-            # Trigger a spike
-            spike_direction = random.choice([-1, 1])  # Negative or positive spike
-            spike_magnitude = random.uniform(0.1, 0.3) * current_price * spike_direction
-            new_price = current_price + spike_magnitude
-
-            # Ensure the price doesn't fall below the minimum value
-            minimum_price = max(total_market_value * 0.01, 1)
-            new_price = max(new_price, minimum_price)
-
-            # Reset the spike counter
-            spike_counters[user_name] = random.randint(50, 200)  # New random threshold
+        if spike_counters[user_name] <= 0:
+            spike_direction = random.choice([-1, 1])
+            spike_magnitude = random.uniform(0.05, 0.15) * current_price * spike_direction
+            new_price = max(current_price + spike_magnitude, 1)
+            spike_counters[user_name] = random.randint(100, 300)  # Reset counter
         else:
-            # Regular price update
-            natural_growth = current_price * baseline_growth_rate
-            new_price = current_price + natural_growth + zigzag_volatility + purchase_impact
-
-            # Ensure price doesn't drop below a meaningful minimum
-            minimum_price = max(total_market_value * 0.01, 1)  # 1% of market average or 1
-            if new_price < minimum_price:
-                new_price = minimum_price
-
-            # Decrement the spike counter
+            natural_growth = current_price * diminishing_growth
+            new_price = current_price + natural_growth + zigzag + purchase_impact
+            new_price = max(new_price, 1)  # Ensure minimum price
             spike_counters[user_name] -= 1
 
-        # Update the stock price
+        # Append the new price
         user["value"].append(round(new_price, 2))
 
-    # Adjust other stocks' prices when one is heavily purchased
-    adjust_other_stocks(main.data, total_market_value)
+    # Adjust other stocks
+    adjust_other_stocks(data, total_market_value)
+    save_to_csv()
 
     # Schedule the next update
-    threading.Timer(10, update_stock).start()
+    threading.Timer(1, update_stock, args=(data, save_to_csv)).start()
 
 
 def adjust_other_stocks(data, total_market_value):
@@ -92,22 +82,22 @@ def adjust_other_stocks(data, total_market_value):
             current_price = user["value"][-1]
             user_stocks = user["numberOfStock"]
 
-            # Reduce price for other stocks proportionally to their market share
-            adjustment_factor = user_stocks / total_market_value
-            price_adjustment = -(total_purchase_impact * adjustment_factor * 0.02)
+            # Adjust proportionally
+            adjustment_factor = user_stocks / total_market_value if total_market_value else 0
+            price_adjustment = -(total_purchase_impact * (1 - adjustment_factor) * 0.01)  # Slightly smaller adjustment
+            new_price = max(current_price + price_adjustment, 1)
+            user["value"][-1] = round(new_price, 2)  # Update current price in place
 
-            # Update price, ensuring it doesn't fall below the minimum
-            user["value"][-1] = max(current_price + price_adjustment, 1)
 
-
-def handle_purchase(user_name: str, amount: int) -> None:
+def handle_purchase(user_name: str, amount: int, data) -> None:
     """
     Handle the purchase of stocks, dynamically impacting the price.
     """
-    for user in main.data:
+    for user in data:
         if user["name"] == user_name:
-            # Record the purchase impact, scaled by the number of stocks bought
-            user["purchase_impact"] += amount * 0.2  # Increase impact more aggressively for larger purchases
+            current_price = user["value"][-1]
+            # Record the purchase impact, scaled heavily by the number of stocks bought and price
+            user["purchase_impact"] += (amount * current_price * 0.4)  # Higher impact for purchases
 
             # Update the user's stock count
             user["numberOfStock"] += amount

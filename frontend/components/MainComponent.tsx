@@ -25,31 +25,23 @@ function MainComponent() {
     } catch (error) {
       console.error("Error fetching data: ", error);
     } finally {
-      setLoading(false); // Set loading to false regardless of success or error
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    console.log("fetchedData");
     fetchData();
+    const interval = setInterval(fetchData, 1000);
+    return () => clearInterval(interval);
   }, [fetchData]);
-
-  useEffect(() => {
-    if (seconds > 0) {
-      setTimeout(() => setSeconds(seconds - 1), 1000);
-    } else {
-      fetchData();
-      setSeconds(10);
-    }
-  });
 
   return (
     <div>
-      {loading ? ( // Conditionally render a loading indicator
+      {loading ? (
         <p>Loading...</p>
       ) : (
         <>
-          <TableComp tableData={newData} />
+          <TableComp tableData={newData} fetchData={fetchData} />
           <Graph data={newData} />
         </>
       )}

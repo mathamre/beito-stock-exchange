@@ -1,71 +1,29 @@
-import asyncio
-import json
-import random
-from typing import List, Union
+import csv
+import os
+import threading
+from typing import List
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from app import newValue
 
-
 app = FastAPI()
 
-data = [
-    {
-        "name": "Olsen",
-        "value": [10],
-        "change": 0,
-        "numberOfStock": 0,
-        "lastBoughtShares": 0,
-        "countedLastBoughtShares": "false",
-        "spent": 0,
-        "recent_activity": 0, 
-            "purchase_impact": 0
-    },
-    {
-        "name": "Hansen",
-        "value": [10],
-        "change": 0,
-        "numberOfStock": 0,
-        "lastBoughtShares": 0,
-        "countedLastBoughtShares": "false",
-        "spent": 0,
-        "recent_activity": 0, 
-        "purchase_impact": 0
-    },
-    {
-        "name": "Johansen",
-        "value": [10],
-        "change": 0,
-        "numberOfStock": 0,
-        "lastBoughtShares": 0,
-        "countedLastBoughtShares": "false",
-        "spent": 0,
-        "recent_activity": 0, 
-        "purchase_impact": 0
-    },
-    {
-        "name": "Thomsen",
-        "value": [10],
-        "change": 0,
-        "numberOfStock": 0,
-        "lastBoughtShares": 0,
-        "countedLastBoughtShares": "false",
-        "spent": 0,
-        "recent_activity": 0, 
-        "purchase_impact": 0
-    },
-]
-
-from fastapi.middleware.cors import CORSMiddleware
-
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace "*" with the specific frontend URL (e.g., "http://localhost:3000") in production
+    allow_origins=["*"],  # Replace "*" with frontend URL in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Data store
+data = []
+
+# File path for CSV
+CSV_FILE = "data.csv"
 
 # Request model for buying stocks
 class BuyRequest(BaseModel):
@@ -73,74 +31,86 @@ class BuyRequest(BaseModel):
     numberOfStocks: int
 
 
+def save_to_csv():
+    """
+    Save the current stock data to a CSV file.
+    """
+    with open(CSV_FILE, mode="w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["name", "value", "numberOfStock", "purchase_impact", "spent"])
+        for user in data:
+            writer.writerow([
+                user["name"],
+                ";".join(map(str, user["value"])),
+                user["numberOfStock"],
+                user.get("purchase_impact", 0),
+                user.get("spent", 0),
+            ])
+
+
+def load_from_csv():
+    """
+    Load stock data from a CSV file if it exists.
+    """
+    if os.path.exists(CSV_FILE):
+        with open(CSV_FILE, mode="r") as file:
+            reader = csv.DictReader(file)
+            loaded_data = []
+            for row in reader:
+                loaded_data.append({
+                    "name": row["name"],
+                    "value": list(map(float, row["value"].split(";"))),
+                    "numberOfStock": int(row["numberOfStock"]),
+                    "purchase_impact": float(row["purchase_impact"]),
+                    "spent": float(row["spent"]),
+                })
+            return loaded_data
+    return []
+
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    FastAPI startup event to load data and start background updates.
+    """
+    global data
+    data = load_from_csv()
+
+    if not data:
+        # Initialize with default values if no data exists
+        data = [
+            {"name": "Olsen", "value": [1], "numberOfStock": 0, "spent": 0, "purchase_impact": 0},
+            {"name": "Hansen", "value": [1], "numberOfStock": 0, "spent": 0, "purchase_impact": 0},
+            {"name": "Johansen", "value": [1], "numberOfStock": 0, "spent": 0, "purchase_impact": 0},
+            {"name": "Thomsen", "value": [1], "numberOfStock": 0, "spent": 0, "purchase_impact": 0},
+            {"name": "Nilsen", "value": [1], "numberOfStock": 0, "spent": 0, "purchase_impact": 0},
+            {"name": "Andersen", "value": [1], "numberOfStock": 0, "spent": 0, "purchase_impact": 0},
+        ]
+
+    # Start the background stock update thread
+    threading.Thread(target=newValue.update_stock, args=(data, save_to_csv), daemon=True).start()
+
 
 @app.get("/data")
 def get_data() -> List[dict]:
-    """API endpoint to fetch the data"""
+    """API endpoint to fetch stock data."""
     return data
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
-
 @app.post("/buy")
 def buy_stocks(request: BuyRequest):
-    # Find the user in the data list
+    """API endpoint to buy stocks for a user."""
     user = next((item for item in data if item["name"] == request.name), None)
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Update the user's number of stocks
+    # Update user stocks
     user["numberOfStock"] += request.numberOfStocks
-    user["lastBoughtShares"] += request.numberOfStocks
-
-    # Get the current stock price (last value in the `value` array)
     current_price = user["value"][-1]
-
-    # Update the spent amount
     user["spent"] += request.numberOfStocks * current_price
 
-    return {"message": f"Successfully bought {request.numberOfStocks} stocks for {request.name}", "updatedUser": user}
+    # Save data to CSV
+    save_to_csv()
 
-
-
-class ValueRequest(BaseModel):
-    current_value: float
-    increment: float
-
-newValue.update_stock()
-
-# @app.post("/calculate")
-# def calculate(request: ValueRequest):
-#     """
-#     API endpoint to calculate a new value.
-#     """
-#     new_value = newValue.calculate_new_value(request.current_value, request.increment)
-#     return {"new_value": new_value}
-
-
-# clients = []
-
-# async def send_data_periodically(websocket: WebSocket):
-#     while True:
-#         # Simulate new stock data
-#         stock_data = {
-#             "name": "Olsen",
-#             "value": [round(random.uniform(20, 30), 2)],  # Random price
-#             "change": round(random.uniform(-0.05, 0.05), 2),
-#             "numberOfStock": 10,
-#         }
-#         await websocket.send_text(json.dumps(stock_data))
-#         await asyncio.sleep(10)  # Send data every 10 seconds
-
-# @app.websocket("/ws/stocks")
-# async def websocket_endpoint(websocket: WebSocket):
-#     await websocket.accept()
-#     clients.append(websocket)
-#     try:
-#         while True:
-#             await send_data_periodically(websocket)
-#     except WebSocketDisconnect:
-#         clients.remove(websocket)
+    return {"message": f"Successfully bought {request.numberOfStocks} stocks for {request.name}"}

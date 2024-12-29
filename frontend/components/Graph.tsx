@@ -14,10 +14,12 @@ interface GraphProps {
 }
 
 const Graph: React.FC<GraphProps> = ({ data }) => {
-  // Limit to the last 100 y-axis values across all series
-  const allValues = data.flatMap((entry) => entry.value.slice(-100));
+  // Extract all x-axis indices based on the largest data series
+  const maxDataLength = Math.max(...data.map((entry) => entry.value.length));
+  const xAxisLabels = Array.from({ length: maxDataLength }, (_, i) => i + 1);
 
-  // Calculate global min/max for y-axis
+  // Calculate global min/max for y-axis across all data points
+  const allValues = data.flatMap((entry) => entry.value);
   const globalMin = Math.min(...allValues);
   const globalMax = Math.max(...allValues);
 
@@ -38,10 +40,10 @@ const Graph: React.FC<GraphProps> = ({ data }) => {
     },
     xAxis: {
       type: "category",
-      data: Array.from({ length: 100 }, (_, i) => i + 1), // Dynamically calculate x-axis labels for the last 100 points
+      data: xAxisLabels, // Use all x-axis labels dynamically
       axisLabel: { show: true },
       axisTick: { show: false },
-      axisLine: { show: false },
+      axisLine: { show: true },
     },
     yAxis: {
       type: "value",
@@ -51,7 +53,7 @@ const Graph: React.FC<GraphProps> = ({ data }) => {
     series: data.map((entry) => ({
       name: entry.name,
       type: "line",
-      data: entry.value.slice(-100), // Align y-axis values with the last 100 points
+      data: entry.value, // Use all y-axis values
       symbol: "none",
     })),
   };

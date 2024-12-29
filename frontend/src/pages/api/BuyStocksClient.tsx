@@ -4,7 +4,7 @@ interface BuyRequest {
   name: string;
   numberOfStocks: number;
 }
-async function buyStocks(data: BuyRequest) {
+async function BuyStocksClient(data: BuyRequest) {
   const endpointURL = `${apiBaseUrl}/buy`;
 
   try {
@@ -40,4 +40,4 @@ async function buyStocks(data: BuyRequest) {
   }
 }
 
-export default buyStocks;
+export default BuyStocksClient;

@@ -1,7 +1,7 @@
 "use client";
 import Header from "../components/Header";
 import React from "react";
-import styles from "../styles/page.module.css";
+import styles from "@/src/styles/page.module.css";
 
 export default function Home() {
   return (

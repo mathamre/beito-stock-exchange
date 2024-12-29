@@ -79,12 +79,12 @@ async def startup_event():
     if not data:
         # Initialize with default values if no data exists
         data = [
-            {"name": "Olsen", "value": [1], "numberOfStock": 0, "spent": 0, "purchase_impact": 0},
-            {"name": "Hansen", "value": [1], "numberOfStock": 0, "spent": 0, "purchase_impact": 0},
-            {"name": "Johansen", "value": [1], "numberOfStock": 0, "spent": 0, "purchase_impact": 0},
-            {"name": "Thomsen", "value": [1], "numberOfStock": 0, "spent": 0, "purchase_impact": 0},
-            {"name": "Nilsen", "value": [1], "numberOfStock": 0, "spent": 0, "purchase_impact": 0},
-            {"name": "Andersen", "value": [1], "numberOfStock": 0, "spent": 0, "purchase_impact": 0},
+            {"name": "Olsen", "value": [1], "numberOfStock": 1, "spent": 0, "purchase_impact": 0},
+            {"name": "Hansen", "value": [1], "numberOfStock": 1, "spent": 0, "purchase_impact": 0},
+            {"name": "Johansen", "value": [1], "numberOfStock": 1, "spent": 0, "purchase_impact": 0},
+            {"name": "Thomsen", "value": [1], "numberOfStock": 1, "spent": 0, "purchase_impact": 0},
+            {"name": "Nilsen", "value": [1], "numberOfStock": 1, "spent": 0, "purchase_impact": 0},
+            {"name": "Andersen", "value": [1], "numberOfStock": 1, "spent": 0, "purchase_impact": 0},
         ]
 
     # Start the background stock update thread

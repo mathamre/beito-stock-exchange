@@ -11,10 +11,13 @@
   "dependencies": {
     "@navikt/ds-css": "^7.5.1",
     "@navikt/ds-react": "^7.5.1",
+    "@prisma/client": "^6.1.0",
     "@types/echarts": "^4.9.22",
     "echarts": "^5.5.1",
     "echarts-for-react": "^3.0.2",
     "next": "^15.1.2",
+    "pg": "^8.13.1",
+    "prisma": "^6.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

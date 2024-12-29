@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import TableComp from "./TableComp";
 import Graph from "./Graph";
 import GetAllData from "@/pages/api/GetAllData";
-import { blob } from "stream/consumers";
 
 interface dataValues {
   name: string;
@@ -16,7 +15,6 @@ interface dataValues {
 function MainComponent() {
   const [newData, setNewData] = useState<dataValues[]>([]);
   const [loading, setLoading] = useState(true);
-  const [seconds, setSeconds] = useState(10);
 
   const fetchData = useCallback(async () => {
     try {

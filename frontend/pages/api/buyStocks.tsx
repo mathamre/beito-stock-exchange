@@ -30,9 +30,13 @@ async function buyStocks(data: BuyRequest) {
 
     const result = await res.json();
     return result;
-  } catch (error: any) {
-    //console.error("Error during fetch operation:", error);
-    throw new Error(`Fetch error: ${error.message}`);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      // Now TypeScript knows 'error' has a 'message' property
+      throw new Error(`Fetch error: ${error.message}`);
+    }
+    // Handle cases where 'error' is not an instance of 'Error'
+    throw new Error("An unknown error occurred during the fetch operation");
   }
 }
 

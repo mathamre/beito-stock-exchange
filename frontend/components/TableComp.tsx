@@ -1,9 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Table } from "@navikt/ds-react";
-import SelectNumber from "./SelectNumber";
-import GetAllData from "@/pages/api/GetAllData";
 import buyStocks from "@/pages/api/buyStocks";
-import router from "next/router";
 import InputNumber from "./InputNumber";
 
 interface dataValues {
@@ -17,7 +14,7 @@ interface dataValues {
 
 interface Props {
   tableData: dataValues[];
-  fetchData: any;
+  fetchData: () => void;
 }
 
 function TableComp({ tableData, fetchData }: Props) {
@@ -28,7 +25,7 @@ function TableComp({ tableData, fetchData }: Props) {
   }, [tableData]);
   const handleBuyStocks = async (name: string, numberOfStock: number) => {
     const payload = { name, numberOfStocks: numberOfStock };
-    const result = await buyStocks(payload);
+    await buyStocks(payload);
     fetchData();
   };
 

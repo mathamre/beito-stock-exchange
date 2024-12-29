@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import TableComp from "./TableComp";
 import Graph from "./Graph";
-import GetAllData from "@/pages/api/GetAllData";
+import GetAllData from "@/src/pages/api/GetAllData";
 
 interface dataValues {
   name: string;

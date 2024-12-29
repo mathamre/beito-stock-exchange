@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Table } from "@navikt/ds-react";
-import buyStocks from "@/pages/api/buyStocks";
+import buyStocks from "@/src/pages/api/buyStocks";
 import InputNumber from "./InputNumber";
 
 interface dataValues {

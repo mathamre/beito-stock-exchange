@@ -3,7 +3,7 @@ version: '3.9'
 services:
   postgres:
     image: postgres
-    container_name: postgres
+    container_name: stock-exchange
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -13,6 +13,16 @@ services:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  prisma:
+    image: node:16
+    container_name: prisma
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "npm install && npx prisma db push"
+    depends_on:
+      - postgres
 
 volumes:
   postgres_data:

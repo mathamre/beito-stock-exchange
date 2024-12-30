@@ -1,4 +1,5 @@
 import prisma from "@/src/lib/prisma";
+
 interface NewBusinessInput {
   name: string;
 }

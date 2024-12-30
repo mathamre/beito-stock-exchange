@@ -35,7 +35,7 @@ const AddBusinessForm = () => {
             }
         } catch (error) {
             console.error("Error during submission:", error); // Debug log
-            setMessage(`Error: ${error.message}`);
+            setMessage(`Error: ${error}`);
         } finally {
             setLoading(false);
         }

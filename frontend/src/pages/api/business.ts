@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             res.status(201).json({ success: true, data: newBusiness });
         } catch (error) {
             console.error("Error adding business:", error);
-            res.status(500).json({ success: false, error: error.message });
+            res.status(500).json({ success: false, error: error });
         }
     } else {
         res.setHeader("Allow", ["POST"]);

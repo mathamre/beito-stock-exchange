@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Business {
+  id          Int        @id @default(autoincrement())
+  name        String
+  portfolio   Portfolio? @relation(fields: [portfolioId], references: [id])
+  portfolioId Int?       @unique // Make the foreign key unique for a one-to-one relation
+}
+
+model Portfolio {
+  id       Int              @id @default(autoincrement())
+  stocks   PortfolioStock[] // A portfolio contains multiple stocks
+  business Business? // A portfolio belongs to one business
+}
+
+model PortfolioStock {
+  id          Int @id @default(autoincrement())
+  stockId     Int
+  portfolioId Int
+
+  quantity  Float // Number of stocks owned in the portfolio
+  stock     Stock     @relation(fields: [stockId], references: [id])
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id])
+}
+
+model Stock {
+  id              Int              @id @default(autoincrement())
+  name            String
+  current_price   Float
+  volatility      Int
+  portfolioStocks PortfolioStock[] // Optional: Stocks can exist without being in a portfolio
+}

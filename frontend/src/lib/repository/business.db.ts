@@ -1,4 +1,5 @@
-import prisma from "@/src/lib/prisma";
+//import prisma from "@/src/lib/prisma";
+import prisma from "../prisma.ts";
 import seedrandom from "seedrandom";
 
 interface NewBusinessInput {
@@ -99,7 +100,7 @@ async function main() {
   // Simulate stock price updates every 10 seconds
   setInterval(async () => {
     await updateStockPrices();
-  }, 10000);
+  }, 1000);
 }
 
 main()
